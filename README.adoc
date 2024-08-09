@@ -1,2 +1,10 @@
-# A poor man's tool to compare CORBA IDL
+= A poor man's tool to compare CORBA IDL
 
+The tool tries to compile IDLs to Java (base and new sets) into jars and compares resulting jars with https://github.com/melix/japicmp-gradle-plugin[japicmp gradle] plugin.
+
+== How to use
+
+. Put base IDLs to `.idlBase` directory
+. Put new IDLs to `.idlNew` directory
+. Run `./gradlew japicmp`
+. See comparison report at `build/reports/japicmp/report.txt`
