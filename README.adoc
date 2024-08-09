@@ -1,0 +1,2 @@
+# A poor man's tool to compare CORBA IDL
+

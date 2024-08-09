@@ -1,0 +1,96 @@
+import me.champeau.gradle.japicmp.JapicmpTask
+
+plugins {
+    id 'java'
+    id 'me.champeau.gradle.japicmp' version '0.4.3'
+}
+
+group 'com.github.zobkov'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    jacorb
+    implementation.extendsFrom(jacorb)
+}
+
+dependencies {
+    jacorb 'org.jacorb:jacorb:3.9'
+    jacorb 'org.jacorb:jacorb-idl-compiler:3.9'
+    jacorb ('org.jacorb:jacorb-omgapi:3.9') {
+        // We need jacorb-services only for purpose of compiled OMG definitions
+        transitive = false
+    }
+    jacorb ('org.jacorb:jacorb-services:3.9') {
+        transitive = false
+    }
+    // https://lists.spline.inf.fu-berlin.de/pipermail/jacorb-developer/2018-July/000927.html
+    jacorb 'org.jboss.spec.javax.rmi:jboss-rmi-api_1.0_spec:1.0.6.Final'
+}
+
+sourceSets {
+    idlBase {
+        java { srcDirs += ["${buildDir}/generated/idlBase"] }
+        compileClasspath = configurations.jacorb
+    }
+    idlNew {
+        java { srcDirs += ["${buildDir}/generated/idlNew"] }
+        compileClasspath = configurations.jacorb
+    }
+}
+
+sourceSets.all { sourceSet ->
+    String name = sourceSet.name
+    if (name == 'main') {
+        return
+    }
+    tasks.register("${name}Jar", Jar) {
+        group 'build'
+        archiveBaseName = "$name"
+        from sourceSet.output
+        dependsOn tasks.named("${name}Classes")
+    }
+    tasks.register("compile${name.capitalize()}", JavaExec) {
+        classpath = configurations.jacorb
+        mainClass = 'org.jacorb.idl.parser'
+        args = ['-W', '1',
+                '-I' + file("$name/OMGidl"),
+                '-d', "${buildDir}/generated/${name}",
+                '-genEnhanced',
+                '-all', '-forceOverwrite',
+                *fileTree("$name").matching {
+                    exclude 'OMGidl'
+                }.files.asList()
+        ]
+        doLast {
+            // Remove stubs/skeletons for OMG definitions that can't be compiled and anyway provided with Jacorb libraries
+            // and can cause clashes in the classpath.
+            ['CosEventChannelAdmin',
+             'CosEventComm',
+             'CosNaming',
+             'CosNotification',
+             'CosNotifyChannelAdmin',
+             'CosNotifyComm',
+             'CosNotifyFilter',
+             'CosTrading',
+             'CORBA',].each { dir -> project.delete(file("${buildDir}/generated/${name}/$dir"))
+            }
+        }
+    }
+
+    TaskProvider<Task> task = tasks.named("compile${name.capitalize()}Java")
+    task.get().dependsOn tasks.named("compile${name.capitalize()}")
+}
+
+tasks.register("japicmp", JapicmpTask) {
+    oldClasspath.from(tasks.named('idlBaseJar'), configurations.jacorb.files)
+    newClasspath.from(tasks.named('idlNewJar'), configurations.jacorb.files)
+    onlyModified = true
+    failOnModification = true
+    txtOutputFile = layout.buildDirectory.file("reports/japicmp/report.txt")
+    ignoreMissingClasses = true
+    dependsOn tasks.named('idlBaseJar'), tasks.named('idlNewJar')
+}
