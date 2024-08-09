@@ -4,7 +4,7 @@ The tool tries to compile IDLs to Java (base and new sets) into jars and compare
 
 == How to use
 
-. Put base IDLs to `.idlBase` directory
-. Put new IDLs to `.idlNew` directory
+. Put base IDLs to `idlBase` directory
+. Put new IDLs to `idlNew` directory
 . Run `./gradlew japicmp`
 . See comparison report at `build/reports/japicmp/report.txt`
