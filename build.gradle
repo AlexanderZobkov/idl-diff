@@ -58,7 +58,7 @@ sourceSets.all { sourceSet ->
         mainClass = 'org.jacorb.idl.parser'
         args = ['-W', '1',
                 '-I' + file("$name/OMGidl"),
-                '-d', "${buildDir}/generated/${name}",
+                '-d', layout.buildDirectory.dir("generated/${name}").get(),
                 '-genEnhanced',
                 '-all', '-forceOverwrite',
                 *fileTree("$name").matching {
@@ -76,7 +76,7 @@ sourceSets.all { sourceSet ->
              'CosNotifyComm',
              'CosNotifyFilter',
              'CosTrading',
-             'CORBA',].each { dir -> project.delete(file("${buildDir}/generated/${name}/$dir"))
+             'CORBA',].each { dir -> project.delete(layout.buildDirectory.dir("generated/${name}/$dir"))
             }
         }
     }
