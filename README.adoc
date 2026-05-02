@@ -8,3 +8,11 @@ The tool tries to compile IDLs to Java (base and new sets) into jars and compare
 . Put new IDLs to `idlNew` directory
 . Run `./gradlew japicmp`
 . See comparison report at `build/reports/japicmp/report.txt`
+
+== Other ways to compare IDLs
+
+In addition to the approach used in this repo, alternative methods for comparing IDLs files could be considered:
+
+* https://revapi.org/[Revapi] – A tool for API compatibility checking. It can serve as an alternative to `japicmp` when you need to analyze breaking changes in Java-based representations of IDLs.
+* https://github.com/eProsima/IDL-Parser[eProsima IDL-Parser] – Use this parser to read and analyze IDL definitions.
+Then, implement a diffing algorithm inspired by https://github.com/OpenAPITools/openapi-diff[OpenAPI Diff], which provides excellent comparison capabilities for OpenAPI specifications.
